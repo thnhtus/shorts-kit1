@@ -212,7 +212,12 @@ const probe = async (file: string, rel: string, size: {w: number; h: number}): P
     // do not cache failures: the file may still be being written
     return {...base, error: r.timedOut ? "ffprobe timed out after 20 s" : `ffprobe exited ${r.code}: ${r.stderr.slice(-500)}`, faststart: null, duration: null, checks: []};
   }
-  let j: {format?: Record<string, any>; streams?: Record<string, any>[]};
+  type ProbeStream = {
+    codec_type?: string; codec_name?: string; profile?: string; width?: number; height?: number; pix_fmt?: string;
+    color_range?: string; color_primaries?: string; color_transfer?: string; color_space?: string;
+    r_frame_rate?: string; nb_frames?: string; bit_rate?: string; sample_rate?: string; channels?: number;
+  };
+  let j: {format?: {duration?: string}; streams?: ProbeStream[]};
   try {
     j = JSON.parse(r.stdout);
   } catch {
@@ -532,6 +537,7 @@ const videoState = (id: string) => {
     let why = voiceHashError;
     if (voiceHash) {
       try {
+        // SAFETY: voiceHash is the imported voiceHash(n: Narration); the cast only bridges the id-based call signature used here.
         expect = (voiceHash as unknown as (id: string) => string)(id);
       } catch (e) {
         why = `hash failed: ${(e as Error).message}`;
@@ -640,7 +646,7 @@ const videoState = (id: string) => {
 
 const status = () => {
   const videos = listVideos().map((id) => {
-    if (id === "gallery") return {id, kind: "gallery" as const, label: "component gallery", command: "bun run dev gallery"};
+    if (id === "gallery") return {id, kind: "gallery" as const, label: "component gallery (composition Video; Styles = the style sheet)", command: "bun run dev gallery"};
     const s = videoState(id);
     const st = stat(join(ROOT, "src", "videos", id));
     return {id, kind: s.kind, flow: s.flow, format: s.format, mode: s.mode, cuts: s.deliverables.filter((d) => !d.master).length, steps: s.steps, next: s.next, created: st ? st.birthtimeMs || st.ctimeMs : 0};

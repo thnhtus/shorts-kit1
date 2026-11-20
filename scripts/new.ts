@@ -51,10 +51,10 @@ const visuals = () =>
     .filter((f) => f.endsWith(".md") && f !== "README.md")
     .map((f) => f.replace(/\.md$/, ""));
 
-const id = process.argv.slice(2).find((a, i, all) => !a.startsWith("-") && !/^--(flow|visual|voice|format|mode)$/.test(all[i - 1] ?? ""));
+const id = process.argv.slice(2).find((a, i, all) => !a.startsWith("-") && !/^--(flow|visual|style|voice|format|mode)$/.test(all[i - 1] ?? ""));
 const flowArg = flag("flow");
 const list = flows();
-const usage = `usage: bun run new <id> --flow <${list.map((f) => f.letter).join("|")}> [--visual ${visuals().join(",")}] [--format portrait|landscape] [--mode short|promo] | <id> --voice none [--format ..] [--scenes a,b,c]`;
+const usage = `usage: bun run new <id> --flow <${list.map((f) => f.letter).join("|")}> [--visual ${visuals().join(",")}] [--style <id>] [--format portrait|landscape] [--mode short|promo] | <id> --voice none [--style <id>] [--format ..] [--scenes a,b,c]`;
 
 if (!id) die(usage);
 if (!ID_RE.test(id!)) die(`id "${id}" must be lowercase kebab-case (e.g. why-sky-blue): it becomes the folder and every file prefix (§13)`);
@@ -68,7 +68,8 @@ if (voiceless) {
   const target = videoDir(id!);
   if (existsSync(target)) die(`src/videos/${id}/ already exists`);
   cpSync(p("src/videos/_template-promo"), target, {recursive: true});
-  await Bun.write(join(target, "video.json"), `${JSON.stringify({format: fmt, mode: "promo"}, null, 2)}\n`);
+  const promoStyle = flag("style");
+  await Bun.write(join(target, "video.json"), `${JSON.stringify({format: fmt, mode: "promo", ...(typeof promoStyle === "string" ? {style: promoStyle} : {})}, null, 2)}\n`);
   const sceneList = flag("scenes");
   if (typeof sceneList === "string") {
     const ids = sceneList.split(",").map((x) => x.trim()).filter(Boolean);
@@ -101,6 +102,9 @@ const visualArg = flag("visual");
 const visual = typeof visualArg === "string" ? visualArg.split(",").map((s) => s.trim()).filter(Boolean) : [];
 const unknown = visual.filter((v) => !visuals().includes(v));
 if (unknown.length) die(`unknown visual type(s): ${unknown.join(", ")}. Have: ${visuals().join(", ")}`);
+const styleArg = flag("style");
+const styles = () => readdirSync(p("docs/styles")).filter((f) => f.endsWith(".md") && f !== "README.md").map((f) => f.replace(/\.md$/, ""));
+if (typeof styleArg === "string" && !styles().includes(styleArg)) die(`unknown style "${styleArg}". Have: ${styles().join(", ")}`);
 
 const tpl = p("src/videos/_template");
 const defaults = JSON.parse(readFileSync(join(tpl, "narration.json"), "utf8")) as Narration;
@@ -114,6 +118,7 @@ const narration: Narration = {
   id: id!,
   flow: flow.letter,
   visual,
+  ...(typeof styleArg === "string" ? {style: styleArg} : {}),
   // A filmed video's voice is the footage; lines come from `bun run cut` (§5j).
   ...(recorded ? {voice: {engine: "recorded", source: ""}} : {}),
   ...(filmed ? {face: {top: 0, bottom: 0}} : {}),

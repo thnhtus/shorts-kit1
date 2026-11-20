@@ -14,7 +14,7 @@ export type NarrationLine = {
   /** Footage only: `false` marks a line that asserts nothing checkable (an opinion, a greeting). */
   claim?: boolean;
 };
-export type NarrationScene = {id: string; hold?: number; lines: NarrationLine[]};
+export type NarrationScene = {id: string; hold?: number; style?: string; lines: NarrationLine[]};
 export type NarrationVoice = {
   engine: string;
   voice?: string;
@@ -27,6 +27,8 @@ export type Narration = {
   id: string;
   flow: string;
   visual: string[];
+  /** Art direction id from docs/styles/ (§6). Default "kit"; a scene may set its own. */
+  style?: string;
   language: string;
   voice: NarrationVoice;
   pause: {line: number; scene: number};

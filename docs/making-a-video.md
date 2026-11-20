@@ -120,6 +120,7 @@ screen (`--visual talking-head`) or a voice-only recording under an ordinary vis
 ```bash
 bun run from ~/Movies/take.mov                               # all of the below in one go (several clips or a folder too)
 bun run new <id> --flow <X> --visual talking-head            # or: --visual text-as-image --voice recorded
+bun run new <id> --flow <X> --style midnight            # art direction: defaults to kit; see docs/styles/README.md
 bun run ingest <id> ~/Movies/take.mov --lang vi --prompt "names said"
 # read the review; edit src/videos/<id>/cuts.json; fix misheard words with "spelling"
 bun run cut <id>

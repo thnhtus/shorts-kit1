@@ -16,7 +16,7 @@ import {cutsHash, FOOTAGE_ENGINE, keptText, loadCuts, loadFootage, loadTranscrip
 import {flatLines, loadNarration, voiceHash, type Narration} from "./lib/narration";
 import {isVoiceless, p, videoArg, videoDir} from "./lib/paths";
 import {lintPromo} from "./lint-promo";
-import {checkStoryboard, loadStoryboard} from "./lib/storyboard";
+import {checkStoryboard, loadStoryboard, styleIds} from "./lib/storyboard";
 import {loadThresholds, ruleOf} from "./lib/thresholds";
 import {applyMap, phraseRe, sentences, wordCount, words} from "./lib/text";
 
@@ -47,9 +47,13 @@ const flowFile = rawNarration.flow ? readdirSync(p("docs/flows")).find((f) => f.
 if (!rawNarration.flow) err('"flow" is missing: choose the shape before writing (§2)');
 else if (!flowFile) err(`flow "${rawNarration.flow}" has no file in docs/flows/ (§2)`);
 const visualIds = readdirSync(p("docs/visuals")).filter((f) => f.endsWith(".md") && f !== "README.md").map((f) => f.replace(/\.md$/, ""));
+const styleIdsList = styleIds();
 if (!Array.isArray(rawNarration.visual) || !rawNarration.visual.length) err('"visual" is empty: decide the visual types before the script (SOUL rule 2, docs/visuals/)');
 else for (const v of rawNarration.visual) if (!visualIds.includes(v)) err(`visual "${v}" has no file in docs/visuals/`);
 if (!rawNarration.language) warn('"language" is missing (BCP-47, e.g. "en")');
+if (rawNarration.style && styleIdsList.length && !styleIdsList.includes(rawNarration.style)) err(`style "${rawNarration.style}" is not in docs/styles/ (${styleIdsList.join(", ")})`);
+const sceneStyleSeen = new Set<string>();
+if (rawNarration.style) sceneStyleSeen.add(rawNarration.style);
 if (!ENGINES[n.voice.engine] && n.voice.engine !== FOOTAGE_ENGINE) err(`voice.engine "${n.voice.engine}" is not one of ${Object.keys(ENGINES).join(", ")} (§4)`);
 const [holdMin, holdMax] = T.outroHoldSeconds as [number, number];
 if (n.outroHold < holdMin || n.outroHold > holdMax) warn(`outroHold ${n.outroHold} s is outside ${holdMin}–${holdMax} s${ref("outroHoldSeconds")}`);
@@ -64,6 +68,10 @@ for (const s of scenes) {
   seen.add(s.id);
   if (!s.lines?.length) err(`scene "${s.id}" has no lines`);
   if (s.hold !== undefined && !(s.hold >= 0)) err(`scene "${s.id}" hold must be seconds ≥ 0`);
+  if (s.style) {
+    if (styleIdsList.length && !styleIdsList.includes(s.style)) err(`scene "${s.id}" style "${s.style}" is not in docs/styles/`);
+    sceneStyleSeen.add(s.style);
+  }
   s.lines?.forEach((l, i) => {
     if (!l.text?.trim()) err(`scene "${s.id}" line ${i + 1} is empty`);
     else if (/\bTODO\b/.test(l.text)) err(`scene "${s.id}" line ${i + 1} is still a TODO`);
@@ -429,6 +437,8 @@ if (!existsSync(p("briefs", `${id}.md`))) warn(`no briefs/${id}.md: the brief ho
     if (voice && !voice.estimated) warn(`no storyboard yet: plan the shots before building scenes (bun run storyboard ${id} --init, docs/storyboard.md)`);
   } else {
     for (const i of checkStoryboard(sb.value, lines.map((l) => l.display), voice ?? null, visualIds)) (i.level === "error" ? err : warn)(`storyboard: ${i.message}`);
+    for (const s of sb.value.shots) if (s.style) sceneStyleSeen.add(s.style);
+    if (sceneStyleSeen.size > T.maxStylesPerVideo) warn(`${sceneStyleSeen.size} styles in this video (${[...sceneStyleSeen].join(", ")}), max ${T.maxStylesPerVideo} (§6)`);
     const todo = sb.value.shots.filter((x) => /TODO/.test(`${x.size ?? ""} ${x.camera} ${x.onScreen}`)).length;
     if (todo) warn(`storyboard: ${todo} shot${todo > 1 ? "s" : ""} still TODO`);
   }

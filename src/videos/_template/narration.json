@@ -1,6 +1,7 @@
 {
   "id": "_template",
   "flow": "A",
+  "style": "kit",
   "visual": [],
   "language": "en",
   "voice": {

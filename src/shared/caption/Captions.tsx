@@ -2,6 +2,7 @@ import React, {useMemo} from "react";
 import {interpolate, useCurrentFrame, useVideoConfig} from "remotion";
 import {clamp, easeOut} from "../motion/anim";
 import {SOUL} from "../soul";
+import type {CaptionSkin} from "../style";
 import {useFormat} from "../format";
 import {FONT, type Palette} from "../theme";
 import type {Voice, VoiceWord} from "../timings";
@@ -87,11 +88,14 @@ export const Captions: React.FC<{
   maxWidth?: number;
   /** Show `lines[].caption` (second language) under the main caption (§7e). */
   secondLanguage?: boolean;
+  /** Style's caption dress (§6/§7); explicit `uppercase`/`size` win over it. */
+  skin?: CaptionSkin;
 }> = ({
   voice,
   palette,
-  uppercase = true,
-  size = 66,
+  skin,
+  uppercase = skin?.uppercase ?? true,
+  size = skin?.size ?? 66,
   bottom: bottomProp,
   maxWidth: maxWidthProp,
   secondLanguage = true,
@@ -129,14 +133,14 @@ export const Captions: React.FC<{
             transform: `scale(${pop})`,
             transformOrigin: "50% 100%",
             fontFamily: FONT.sans,
-            fontWeight: 900,
+            fontWeight: skin?.weight ?? 900,
             fontSize: size,
             lineHeight: 1.08,
             letterSpacing: -0.5,
             textTransform: uppercase ? "uppercase" : "none",
-            WebkitTextStroke: "10px #000",
+            WebkitTextStroke: `${skin?.strokeWidth ?? 10}px ${skin?.strokeColor ?? "#000"}`,
             paintOrder: "stroke fill",
-            textShadow: "0 6px 18px rgba(0,0,0,0.6)",
+            textShadow: skin?.shadow ?? "0 6px 18px rgba(0,0,0,0.6)",
             pointerEvents: "none",
           }}
         >

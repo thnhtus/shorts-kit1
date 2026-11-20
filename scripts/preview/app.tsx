@@ -847,7 +847,7 @@ type VWord = {text: string; start: number; end: number; line: number};
 type VLine = {scene: string; index: number; text: string; start: number; end: number};
 type VoiceJson = {words?: VWord[]; lines?: VLine[]; audio?: string | null; estimated?: boolean};
 type NarLine = {text: string; fact?: string | null; caption?: string};
-type NarJson = {scenes?: {id: string; lines?: NarLine[]}[]};
+type NarJson = {style?: string; scenes?: {id: string; style?: string; lines?: NarLine[]}[]};
 type Fact = {id: string; claim: string; status: string};
 
 const useJson = <T,>(f: FileInfo) => {
@@ -966,7 +966,7 @@ const ScriptTab = ({v}: {v: VideoState}) => {
 };
 
 // ── storyboard tab: the shot list, reviewed before scene code ──────────────
-type SbShot = {id: string; line: number; scene?: string; beat?: number; seconds?: number; lineText?: string; anchor?: string | null; size?: string; angle?: string; card?: string; camera: string; onScreen: string; text?: string | null; visual?: string; transition?: string; sfx?: string | null; notes?: string; status: "planned" | "approved" | "built"};
+type SbShot = {id: string; line: number; scene?: string; beat?: number; seconds?: number; lineText?: string; anchor?: string | null; size?: string; angle?: string; card?: string; camera: string; onScreen: string; text?: string | null; visual?: string; style?: string; transition?: string; sfx?: string | null; notes?: string; status: "planned" | "approved" | "built"};
 type SbJson = {shots?: SbShot[]};
 const FPS_UI = 30;
 const norm = (x: string) => x.toLowerCase().normalize("NFC").replace(/[^\p{L}\p{N}%]+/gu, "");
@@ -1059,6 +1059,7 @@ const StoryboardTab = ({v}: {v: VideoState}) => {
       <Card title="Storyboard">
         <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
           <Badge size="sm" tone="neutral">{shots.length} shots</Badge>
+          <Badge size="sm" tone="accent">style: {nar?.style ?? "kit"}</Badge>
           {counts.planned > 0 && <Badge size="sm" tone="warning">{counts.planned} planned</Badge>}
           {counts.approved > 0 && <Badge size="sm" tone="accent">{counts.approved} approved</Badge>}
           {counts.built > 0 && <Badge size="sm" tone="success">{counts.built} built</Badge>}
@@ -1112,6 +1113,7 @@ const StoryboardTab = ({v}: {v: VideoState}) => {
                       {a !== null && <span className="text-muted-foreground tabular-nums">{a.toFixed(1)}–{b.toFixed(1)} s</span>}
                       {s.transition && <Badge size="sm" tone="neutral">{s.transition}</Badge>}
                       {s.visual && <Badge size="sm" tone="neutral">{s.visual}</Badge>}
+                      {s.style && s.style !== (nar?.style ?? "kit") && <Badge size="sm" tone="accent">style: {s.style}</Badge>}
                       {s.sfx && <Badge size="sm" tone="neutral">sfx: {s.sfx}</Badge>}
                     </div>
                     {promoShots ? (

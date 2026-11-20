@@ -52,6 +52,7 @@ bun run cover <id>               # out/<id>/<id>-cover.png
 bun run normalize <id>           # out/<id>/<id>-loud.mp4
 bun run encode <id>              # out/<id>/<id>-upload.mp4
 bun run preview                  # local dashboard: progress, script, storyboard, hand-off
+bun run anim <spec.json>         # one animated preset → out/anim/<name>.mp4 + sheet (docs/anim/)
 bun run check                    # boundaries + tsc --noEmit
 ```
 

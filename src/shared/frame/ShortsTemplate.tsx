@@ -4,9 +4,9 @@ import {BackgroundMusic} from "../audio/BackgroundMusic";
 import {Sfx, type SfxCue} from "../audio/Sfx";
 import {Captions} from "../caption/Captions";
 import {clamp} from "../motion/anim";
+import {getStyle, StyleBackdrop, type Style} from "../style";
 import type {Palette} from "../theme";
 import {sceneTimings, wordsInScene, type SceneWord, type Voice} from "../timings";
-import {Backdrop} from "./Backdrop";
 import {SafeZones} from "./SafeZones";
 import {Watermark} from "./Watermark";
 
@@ -19,6 +19,8 @@ export type SceneProps = {
   /** The scene's words, in frames relative to the scene start. */
   words: SceneWord[];
   palette: Palette;
+  /** The scene's art direction (§6): the video's style unless the scene overrides it. */
+  style?: Style;
 };
 
 export type SceneComponent = React.FC<SceneProps>;
@@ -50,7 +52,10 @@ export const ShortsTemplate: React.FC<{
   /** Silent hold after the last word, seconds. */
   outroHold: number;
   scenes: Record<string, SceneComponent>;
-  palette: Palette;
+  /** Palette for the kit style (old videos). Ignored when `style` names a look. */
+  palette?: Palette;
+  /** Style id or Style (§6). Default "kit". A scene may set its own (SceneProps.style). */
+  style?: string | Style;
   safe?: boolean;
   captions?: boolean;
   watermark?: string;
@@ -59,7 +64,10 @@ export const ShortsTemplate: React.FC<{
   sfx?: readonly SfxCue[];
   /** Drawn under every scene. Defaults to the shared Backdrop; pass null for none. */
   background?: React.ReactNode;
-}> = ({voice, fps, outroHold, scenes, palette, safe = false, captions = true, watermark, music, sfx, background}) => {
+}> = ({voice, fps, outroHold, scenes, palette, style = "kit", safe = false, captions = true, watermark, music, sfx, background}) => {
+  const resolved = typeof style === "string" ? getStyle(style) : style;
+  // kit + an explicit palette keeps an old video exactly as it was
+  const videoStyle = !resolved.look && palette ? {...resolved, palette} : resolved;
   const timings = sceneTimings(voice, fps, outroHold);
   for (const t of timings) {
     if (!scenes[t.id]) {
@@ -67,8 +75,8 @@ export const ShortsTemplate: React.FC<{
     }
   }
   return (
-    <AbsoluteFill style={{backgroundColor: palette.bg}}>
-      {background === undefined ? <Backdrop palette={palette} /> : background}
+    <AbsoluteFill style={{backgroundColor: videoStyle.palette.bg}}>
+      {background === undefined ? <StyleBackdrop style={videoStyle} /> : background}
       {voice.audio ? <Html5Audio src={staticFile(voice.audio)} /> : null}
       {music ? <BackgroundMusic src={music.src} volume={music.volume} loop={music.loop} voice={voice} /> : null}
       {sfx?.length ? <Sfx cues={sfx} /> : null}
@@ -78,13 +86,13 @@ export const ShortsTemplate: React.FC<{
         return (
           <Sequence key={t.id} from={t.from} durationInFrames={t.duration + (last ? 0 : XFADE)} name={t.id}>
             <FadeIn frames={i === 0 ? 0 : XFADE}>
-              <Scene id={t.id} from={t.from} duration={t.duration} words={wordsInScene(voice, fps, t)} palette={palette} />
+              <Scene id={t.id} from={t.from} duration={t.duration} words={wordsInScene(voice, fps, t)} palette={videoStyle.palette} style={videoStyle} />
             </FadeIn>
           </Sequence>
         );
       })}
-      {captions ? <Captions voice={voice} palette={palette} /> : null}
-      {watermark ? <Watermark text={watermark} palette={palette} /> : null}
+      {captions ? <Captions voice={voice} palette={videoStyle.palette} skin={videoStyle.caption} /> : null}
+      {watermark ? <Watermark text={watermark} palette={videoStyle.palette} /> : null}
       {safe ? <SafeZones /> : null}
     </AbsoluteFill>
   );

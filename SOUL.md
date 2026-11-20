@@ -97,6 +97,7 @@ the runbook keeps the **commands**; the rules stay in the §.
    `bun run lint <id>` before spending a TTS call.
 6. **TTS:** `bun run tts <id>`. The script decides scene length; never set it by
    hand. Then **listen** to the whole file, and check it for loops (§4).
+6b. **Art direction:** set `style` in `narration.json` (or `--style <id>` when scaffolding) and every scene, caption, watermark and cover draw from it. Switch styles only on a cut/reveal and stay within `maxStylesPerVideo` (§6).
 7. **Build scenes** in `bun run dev <id>`. Render stills with the safe-zone
    overlay and **look** (§7) before rendering the full video.
 8. **Render → normalize → encode** (§8, §11).
@@ -121,6 +122,7 @@ and ears.
       record; every `contested` fact on screen carries its caveat (§9)
 - [ ] Style pass done (§3b): no sentence over the limit, no banned phrase, no
       four-word phrase reused from another video, no colon/dash in spoken text
+- [ ] `style` set in `narration.json` (§6); `bun run lint <id>` has no unknown-style error; rendered frames checked for contrast on light styles (paper, porcelain, sand)
 - [ ] Tension pass done (§3c): the hook asks and does not answer, every scene ends
       with a pull, the payoff does not recap, no sentence exists only to name a
       source, at least one moment (person, place, time, action) on record
@@ -184,3 +186,4 @@ not been adapted to your channel yet (`sk-pipeline` checks this at step 0).
 
 | date | rule (§) | old | new | why |
 | --- | --- | --- | --- | --- |
+| 2026-11-20 | §6 | colours were a single channel palette, fixed in `theme.ts` | a `style` axis (kit + 8 looks) declared per video in `narration.json`/`video.json`; scenes read `palette`/`style` from `SceneProps` | lets a video pick a world per topic without changing scene code or `theme.ts` |

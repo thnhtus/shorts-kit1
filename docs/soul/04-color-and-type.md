@@ -5,25 +5,23 @@
 
 ---
 
-## 6. Colour [default]
+## 6. Art direction & colour (`style`) [default]
 
-The palette is the source channel's; pick your own. The red-is-rare rule is **[craft]**.
+A video declares a **style** from `docs/styles/` (`kit`, `midnight`, `aurora`, `ember`, `graphite`, `lime`, `paper`, `porcelain`, `sand`) in `narration.json` → `style` (or `video.json` → `style` for a voiceless promo). `kit` is the default (`DEFAULT_PALETTE` on the shared gradient `Backdrop`); the other eight wrap `LOOKS` + `Stage` + a matching caption skin in `src/shared/style/index.tsx`. The red-is-rare rule is **[craft]**.
 
-| Role | Default |
+| Role (`palette.*`) | `kit` default |
 | --- | --- |
-| Main line, highlight, current caption word | cyan `#2FD8FF` |
-| Negation, the punch | red `#FF3B30` |
-| Measurement, warning | yellow `#FFCC00` / white |
-| Selected region | lime `#B7E04B` |
-| Text | white, thick dark outline |
-| Text-only backgrounds | near-black `#05080B` |
+| Main line, highlight, current caption word (`accent`) | cyan `#3FD0FF` |
+| Negation, the punch (`bad`) | red `#FF4D4D` |
+| Measurement, warning (`warn`) | yellow `#FFC83D` |
+| Positive / selected (`good`) | lime `#7BE07B` |
+| Text (`text`) | white `#F4F7FB` (or ink on light styles) |
+| Canvas (`bg`) | deep navy `#0B1016` (or the style's `Stage`) |
 
-- **Red is reserved for the punch** ("0 bridges", the struck-out word). Used often,
-  it loses its weight: the same economy as the strong word in §1b.
-- Colours are a **channel identity**: change them once in `theme.ts`, never per
-  video. Scenes import roles (`theme.accent`), not hex codes.
-- When a background is uncontrolled (clips, GIFs), the text brings its own contrast:
-  outline, shadow, or a dark scrim under it (§5e).
+- **Red / `palette.bad` is reserved for the punch** ("0 bridges", the struck-out word). Used often, it loses its weight: the same economy as the strong word in §1b.
+- **Never hex in scene code.** Scenes read `palette` (and optional `style`) from `SceneProps`, never importing a style, look, or colour literal.
+- **One world per video.** Switching style mid-video (`scene.style` or `shot.style`) is only for a story that changes world (a demo inside the story, an archive plate). Switch on a cut or reveal, never on a continuous move, and keep a video within `maxStylesPerVideo` (2).
+- When a background is uncontrolled (clips, GIFs) or light (`paper`, `porcelain`, `sand`), `style.caption` adjusts the caption stroke/shadow; still check contrast on rendered frames (§5e, §7).
 
 ## 6b. Fonts: ship them in the repo, never borrow the OS's [craft; font licence is hard]
 

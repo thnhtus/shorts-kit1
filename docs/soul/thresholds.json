@@ -59,6 +59,11 @@
     "rule": "§7c",
     "why": "more than half the scenes with on-frame text is a sign of failure; viewers remember none of seven valid headlines"
   },
+  "maxStylesPerVideo": {
+    "value": 2,
+    "rule": "§6",
+    "why": "a short is one world; a third style reads as a kit showcase, not a film. Switch on a cut or a reveal, never on a continuous move"
+  },
   "kickerMaxChars": {
     "value": 25,
     "rule": "§7c",

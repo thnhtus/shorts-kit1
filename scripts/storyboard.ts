@@ -82,6 +82,7 @@ const lines = flatLines(narration);
 const voicePath = join(videoDir(id), "voice.json");
 const voice: VoiceLike | null = existsSync(voicePath) ? JSON.parse(readFileSync(voicePath, "utf8")) : null;
 const visualIds = visualIdsAll();
+const defaultStyle = (narration as {style?: string}).style ?? (narration as {scenes?: {style?: string}[]}).scenes?.[0]?.style;
 const defaultVisual = (narration as {visual?: string[]}).visual?.[0];
 
 if (args.includes("--init")) {
@@ -98,6 +99,7 @@ if (args.includes("--init")) {
       onScreen: "TODO",
       text: null,
       ...(defaultVisual ? {visual: defaultVisual} : {}),
+      ...(defaultStyle ? {style: defaultStyle} : {}),
       transition: i === 0 ? "cut" : "continuous",
       sfx: null,
       status: "planned",

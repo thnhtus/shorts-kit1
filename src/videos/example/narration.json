@@ -1,6 +1,7 @@
 {
   "id": "example",
   "flow": "H",
+  "style": "kit",
   "visual": ["illustrated-scene", "text-as-image"],
   "language": "en",
   "voice": {

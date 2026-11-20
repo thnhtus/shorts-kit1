@@ -70,6 +70,8 @@ export type PromoVoice = {
 
 export type Promo = {
   fps?: number;
+  /** Art direction id from docs/styles/ (§6). Default "kit". */
+  style?: string;
   /** Beats per minute of the music, measured (never the tracker's guess). */
   bpm?: number;
   /** Seconds from the film's first frame to beat 0. Default 0. */

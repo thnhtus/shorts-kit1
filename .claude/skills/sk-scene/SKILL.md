@@ -16,7 +16,7 @@ The § wins over this file.
 
 ```
 src/videos/<id>/  entry.tsx  <Name>.tsx  scenes.tsx  Cover.tsx  timing.ts  narration.json  voice.json
-src/shared/       theme.ts font.ts timings.ts
+src/shared/       theme.ts font.ts timings.ts style/ (STYLES, getStyle, StyleBackdrop)
                   frame/ (ShortsTemplate, SafeZones, SafeCheck, Watermark, Backdrop)
                   caption/ (Captions, TypeStage)  audio/ (BackgroundMusic, Sfx)  motion/ (anim)
 ```
@@ -49,6 +49,7 @@ portrait defaults only. Landscape promos: `docs/promo/README.md`.
    Other borrowed code is rewritten against `theme.ts`, with its source and licence
    in a comment. Avoid runtime dependencies that fetch
    data while rendering: a re-render must produce the same file.
+1b. **Draw from `SceneProps.palette` and `SceneProps.style` (§6).** Never hardcode hex colours or import a look in scene code; the video's `style` (`narration.json` → `style`, docs in `docs/styles/`) sets the palette, backdrop and caption skin. Switch styles mid-video only on a cut or reveal.
 2. **Time from the voice, never by hand.** Use `src/shared/timings.ts`:
    `sceneTimings(voice, fps, outroHold)`, `totalFrames(voice, fps, outroHold)`,
    `wordsInScene(...)`, `wordAt(voice, t)`. Anchor a shot to the word that names it

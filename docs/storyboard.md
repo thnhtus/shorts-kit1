@@ -41,6 +41,7 @@ bun run preview                  # Storyboard tab: each shot with its line, stil
 | `onScreen` | the world, the figure, what appears or changes during the shot |
 | `text` | on-frame text, data only (a number, a name), or `null` (§7c) |
 | `visual` | a visual type id from `docs/visuals/` |
+| `style` | optional art direction id from `docs/styles/`; inherits the video's `narration.json` → `style`. Switch only on a cut or reveal, at most `maxStylesPerVideo` per video (§6) |
 | `transition` | how the shot begins: `cut`, `crossfade`, `continuous` (the same move carries on), `reveal` |
 | `sfx` | a sound card id from [`shots/sfx/`](shots/sfx/README.md) or a file under `public/sfx/` (give it a card with its licence), cued at the shot start; lint warns on an unknown id or a file with no card |
 | `notes` | anything the builder must know |

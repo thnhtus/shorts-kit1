@@ -2,9 +2,9 @@ import React from "react";
 import {AbsoluteFill, Html5Audio, interpolate, Sequence, staticFile, useCurrentFrame} from "remotion";
 import {Sfx, type SfxCue} from "../audio/Sfx";
 import {clamp} from "../motion/anim";
+import {getStyle, StyleBackdrop, type Style} from "../style";
 import {promoFrames, promoTimings, assertPromo, type Promo} from "../promo";
 import type {Palette} from "../theme";
-import {Backdrop} from "./Backdrop";
 import type {SceneComponent} from "./ShortsTemplate";
 import {SafeZones} from "./SafeZones";
 
@@ -20,7 +20,11 @@ export type VoiceClip = {src: string; at: number; frames: number; volume?: numbe
 const RAMP = 4; // frames: a duck or a mute never steps
 
 /** 1 inside a window, ramping to 0 outside it over RAMP frames. */
-const near = (f: number, a: number, b: number) => (f < a ? interpolate(f, [a - RAMP, a], [0, 1], clamp) : f > b ? interpolate(f, [b, b + RAMP], [1, 0], clamp) : 1);
+const near = (f: number, a: number, b: number) => {
+  if (f < a) return interpolate(f, [a - RAMP, a], [0, 1], clamp);
+  if (f > b) return interpolate(f, [b, b + RAMP], [1, 0], clamp);
+  return 1;
+};
 
 const Music: React.FC<{promo: Promo; fps: number; total: number; clips: readonly VoiceClip[]; silence: readonly (readonly [number, number])[]; duck: number}> = ({promo, fps, total, clips, silence, duck}) => {
   const m = promo.music!;
@@ -64,7 +68,8 @@ export const PromoTemplate: React.FC<{
   promo: Promo;
   fps: number;
   scenes: Record<string, SceneComponent>;
-  palette: Palette;
+  palette?: Palette;
+  style?: string | Style;
   safe?: boolean;
   sfx?: readonly SfxCue[];
   /** Spoken lines already placed on the timeline (see `voiceLineFrame`). */
@@ -75,16 +80,19 @@ export const PromoTemplate: React.FC<{
   duck?: number;
   /** Drawn under every scene. Defaults to the shared Backdrop; pass null for none. */
   background?: React.ReactNode;
-}> = ({promo, fps, scenes, palette, safe = false, sfx, voiceClips = [], musicSilence = [], duck = 0.5, background}) => {
+}> = ({promo, fps, scenes, palette, style = promo.style, safe = false, sfx, voiceClips = [], musicSilence = [], duck = 0.5, background}) => {
   assertPromo(promo);
   const timings = promoTimings(promo, fps);
   const total = promoFrames(promo, fps);
   for (const t of timings) {
     if (!scenes[t.id]) throw new Error(`Scene "${t.id}" is in promo.json but has no component in scenes.tsx.`);
   }
+  const resolved = typeof style === "string" || style === undefined ? getStyle(style) : style;
+  // kit + an explicit palette keeps an old promo exactly as it was
+  const videoStyle = !resolved.look && palette ? {...resolved, palette} : resolved;
   return (
-    <AbsoluteFill style={{backgroundColor: palette.bg}}>
-      {background === undefined ? <Backdrop palette={palette} /> : background}
+    <AbsoluteFill style={{backgroundColor: videoStyle.palette.bg}}>
+      {background === undefined ? <StyleBackdrop style={videoStyle} /> : background}
       {promo.music ? <Music promo={promo} fps={fps} total={total} clips={voiceClips} silence={musicSilence} duck={duck} /> : null}
       {voiceClips.map((c) => (
         <Sequence key={c.src} from={c.at} durationInFrames={c.frames} name={`voice ${c.src}`}>
@@ -99,7 +107,7 @@ export const PromoTemplate: React.FC<{
         return (
           <Sequence key={t.id} from={t.from} durationInFrames={t.duration + nextFade} name={t.id}>
             <FadeIn frames={fade}>
-              <Scene id={t.id} from={t.from} duration={t.duration} words={[]} palette={palette} />
+              <Scene id={t.id} from={t.from} duration={t.duration} words={[]} palette={videoStyle.palette} style={videoStyle} />
             </FadeIn>
           </Sequence>
         );

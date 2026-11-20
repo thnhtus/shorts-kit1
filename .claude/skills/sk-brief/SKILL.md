@@ -26,12 +26,15 @@ this file.
    `timeline`, `archive-plate`, `news-photo`, `gif`, `b-roll`) and read each
    chosen type's file. Flow is how the story is told; visual is how it gets on
    screen. They are independent axes.
+4b. **Pick the art direction** from `docs/styles/README.md` (default `kit`, or
+   a named style such as `midnight`). Pass it at scaffold time with
+   `--style <id>`; it is written to `narration.json` → `style` (§6).
 5. **Check the licence of every image and clip now.** Record each in
    `docs/facts/sources.json` with its `licence`. An image you cannot license is a
    claim you cannot show; find another visual or cut the claim before scripting.
 6. **Scaffold:**
    ```bash
-   bun run new <id> --flow <A..N>
+   bun run new <id> --flow <A..N> --style <kit|midnight|...>
    ```
    Then set `visual` in `src/videos/<id>/narration.json` to the chosen ids.
    `id` follows §13 (lowercase, hyphenated, never reused for a different video).
@@ -52,6 +55,7 @@ this file.
 
 - [ ] `flow` in `narration.json` matches the flow named in the brief
 - [ ] `visual` is set and every id exists in `docs/visuals/`
+- [ ] `style` is set and the id exists in `docs/styles/`
 - [ ] every fact id in the brief exists in `docs/facts/facts.json`
 - [ ] every image has a source record with a licence
 - [ ] `bun run facts` exits clean

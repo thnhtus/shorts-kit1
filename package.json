@@ -40,6 +40,7 @@
     "css": "bun scripts/css.ts",
     "model": "bun scripts/model.ts",
     "geo": "bun scripts/geo.ts",
+    "anim": "bun scripts/anim.ts",
     "check": "bun scripts/check-boundaries.ts && bun scripts/check-sfx.ts && tsc --noEmit"
   },
   "dependencies": {

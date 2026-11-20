@@ -1,21 +1,23 @@
 import React from "react";
 import {AbsoluteFill} from "remotion";
-import {Backdrop} from "../../shared/frame/Backdrop";
 import {COVER_BAND, PANEL_LEFT, PANEL_MAX_W} from "../../shared/frame/SafeZones";
 import {SafeCheck} from "../../shared/frame/SafeCheck";
-import {DEFAULT_PALETTE, FONT} from "../../shared/theme";
+import {getStyle, StyleBackdrop} from "../../shared/style";
+import {FONT} from "../../shared/theme";
+import narration from "./narration.json";
 
 /**
  * The cover is its own composition, not a frame of the cut (§10). Keep text
  * inside COVER_BAND (the 1:1.29 grid crop), one big number, about three words,
  * no spoiler, no logo. Check it at 200 px wide (sk-handoff).
  */
-const p = DEFAULT_PALETTE;
+const style = getStyle((narration as {style?: string}).style);
+const p = style.palette;
 
 export const Cover: React.FC<{safe: boolean}> = ({safe}) => (
   <SafeCheck safe={safe} cover>
     <AbsoluteFill>
-      <Backdrop palette={p} />
+      <StyleBackdrop style={style} />
       <div
         style={{
           position: "absolute",

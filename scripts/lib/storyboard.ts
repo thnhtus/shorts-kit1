@@ -49,6 +49,8 @@ export type Shot = {
   text?: string | null;
   /** A visual type id from docs/visuals/. */
   visual?: string;
+  /** Art direction id from docs/styles/ (§6). Inherited from the scene; set to switch worlds on a cut. */
+  style?: string;
   /** How the shot begins: "cut", "crossfade", "continuous" (same camera move carries on), "reveal". */
   transition?: string;
   /** A bundled SFX id or a file under public/sfx/, cued at the shot start or the anchor word. */
@@ -72,7 +74,7 @@ export type TimedShot = Shot & {start: number | null; end: number | null; anchor
 export const storyboardPath = (id: string) => join(videoDir(id), "storyboard.json");
 
 /** Field order on disk: `lineText` right after `line`, so a shot reads as "where, what it was planned on, how". */
-const ORDER = ["id", "line", "scene", "beat", "seconds", "lineText", "anchor", "size", "angle", "card", "camera", "onScreen", "text", "visual", "transition", "sfx", "notes", "status"];
+const ORDER = ["id", "line", "scene", "beat", "seconds", "lineText", "anchor", "size", "angle", "card", "camera", "onScreen", "text", "visual", "style", "transition", "sfx", "notes", "status"];
 const ordered = (s: Shot) => {
   const o: Record<string, unknown> = {};
   for (const k of ORDER) if (k in s) o[k] = (s as Record<string, unknown>)[k];
@@ -142,7 +144,7 @@ export const syncStoryboard = (sb: Storyboard, lines: string[]): {sb: Storyboard
       changes.push({shot: s.id, kind: "gone", detail: `its line "${s.lineText}" was removed`});
       return {...s, line: -1};
     }
-    changes.push({shot: s.id, kind: "changed", detail: `line ${s.line} was "${s.lineText}", now "${cur}"${s.status !== "planned" ? `; ${s.status} → planned` : ""}`});
+    changes.push({shot: s.id, kind: "changed", detail: `line ${s.line} was "${s.lineText}", now "${cur}"${s.status === "planned" ? "" : `; ${s.status} → planned`}`});
     const note = `[line changed, was: "${s.lineText}"]`;
     return {...s, lineText: cur, status: "planned" as ShotStatus, notes: s.notes ? `${note} ${s.notes}` : note};
   });
@@ -249,8 +251,17 @@ export const sfxIds = (): string[] => {
 };
 const SFX_IDS = sfxIds();
 
-/** Checks every shot needs, voiced or not: camera, size, angle, card, screen, status, visual. */
-const shotIssues = (s: Shot, visualIds: string[], cardIds: string[]): Issue[] => {
+/** Style ids: the .md files in docs/styles/ (the registry is src/shared/style). */
+export const styleIds = (): string[] => {
+  try {
+    return readdirSync(p("docs/styles")).filter((f) => f.endsWith(".md") && f !== "README.md").map((f) => f.replace(/\.md$/, ""));
+  } catch {
+    return [];
+  }
+};
+
+/** Checks every shot needs, voiced or not: camera, size, angle, card, screen, status, visual, style. */
+const shotIssues = (s: Shot, visualIds: string[], cardIds: string[], styles: string[] = styleIds()): Issue[] => {
   const tag = s.id || "(no id)";
   const out: Issue[] = [];
   if (!s.camera?.trim()) out.push({level: "warn", message: `${tag}: no camera move (§12: no shot stands still while the voice speaks)`});
@@ -270,6 +281,7 @@ const shotIssues = (s: Shot, visualIds: string[], cardIds: string[]): Issue[] =>
   }
   if (!SHOT_STATUSES.includes(s.status)) out.push({level: "error", message: `${tag}: status must be one of ${SHOT_STATUSES.join(", ")}`});
   if (s.visual && visualIds.length && !visualIds.includes(s.visual)) out.push({level: "warn", message: `${tag}: visual "${s.visual}" is not in docs/visuals/`});
+  if (s.style && styles.length && !styles.includes(s.style)) out.push({level: "warn", message: `${tag}: style "${s.style}" is not in docs/styles/`});
   return out;
 };
 
@@ -281,6 +293,26 @@ const sizeRunIssues = (shots: Shot[]): Issue[] => {
   for (let i = 2; i < shots.length; i++) {
     const [a, b, c] = [shots[i - 2], shots[i - 1], shots[i]];
     if (a.size && a.size !== "TODO" && a.size === b.size && b.size === c.size) out.push({level: "warn", message: `${a.id}, ${b.id}, ${c.id}: three shots in a row at size ${a.size}; change size at a beat (docs/shots/sizes.md)`});
+  }
+  return out;
+};
+
+/** Style discipline (§6): do not switch style on a continuous move, and keep a video to at most `maxStyles`. */
+const styleRunIssues = (shots: Shot[], maxStyles = 2): Issue[] => {
+  const out: Issue[] = [];
+  const used = new Set<string>();
+  for (let i = 0; i < shots.length; i++) {
+    const cur = shots[i];
+    if (cur.style) used.add(cur.style);
+    if (i > 0) {
+      const prev = shots[i - 1];
+      if (prev.style && cur.style && prev.style !== cur.style && cur.transition === "continuous") {
+        out.push({level: "warn", message: `${cur.id}: switches style (${prev.style} → ${cur.style}) on a continuous move; use a cut or reveal (§6)`});
+      }
+    }
+  }
+  if (used.size > maxStyles) {
+    out.push({level: "warn", message: `${used.size} styles across shots (${[...used].join(", ")}), max ${maxStyles} per video (§6)`});
   }
   return out;
 };
@@ -332,7 +364,7 @@ export const checkPromoStoryboard = (sb: Storyboard, promo: Promo, visualIds: st
     }
     issues.push(...shotIssues(s, visualIds, cardIds));
   }
-  issues.push(...sizeRunIssues(sb.shots));
+  issues.push(...sizeRunIssues(sb.shots), ...styleRunIssues(sb.shots));
   for (const sc of scenes) if (!sb.shots.some((s) => s.scene === sc.id)) issues.push({level: "warn", message: `scene "${sc.id}" has no shot`});
   return issues;
 };
@@ -360,11 +392,11 @@ export const checkStoryboard = (sb: Storyboard, lines: string[], voice: VoiceLik
     else if (cur !== undefined && s.lineText !== undefined && !sameLine(cur, s.lineText)) {
       issues.push({
         level: s.status === "planned" ? "warn" : "error",
-        message: `${tag}: planned against "${s.lineText}", line ${s.line} is now "${cur}"${s.status !== "planned" ? ` but it is still ${s.status}` : ""}. Run \`bun run storyboard <id> --sync\` and re-check the shot`,
+        message: `${tag}: planned against "${s.lineText}", line ${s.line} is now "${cur}"${s.status === "planned" ? "" : ` but it is still ${s.status}`}. Run \`bun run storyboard <id> --sync\` and re-check the shot`,
       });
     }
   }
-  issues.push(...sizeRunIssues(sb.shots));
+  issues.push(...sizeRunIssues(sb.shots), ...styleRunIssues(sb.shots));
   if (!voice || voice.estimated) issues.push({level: "warn", message: "timings are estimates: plan against the real voice (bun run tts)"});
   else for (const t of timeShots(sb, voice)) if (!t.anchorFound) issues.push({level: "error", message: `${t.id}: anchor "${t.anchor}" is not in line ${t.line} any more`});
   return issues;

@@ -9,7 +9,7 @@ import {promoProblems, promoSeconds, type Promo} from "../src/shared/promo";
 import {readMeta} from "./lib/format";
 import {p, videoDir} from "./lib/paths";
 import {loadThresholds} from "./lib/thresholds";
-import {checkPromoStoryboard, loadStoryboard} from "./lib/storyboard";
+import {checkPromoStoryboard, loadStoryboard, styleIds} from "./lib/storyboard";
 import {readdirSync} from "node:fs";
 
 export const lintPromo = (id: string): number => {
@@ -25,15 +25,18 @@ export const lintPromo = (id: string): number => {
     return 1;
   }
   errors.push(...promoProblems(promo));
-  if (readMeta(id).mode !== "promo") errors.push('video.json "mode" must be "promo" for a video with no voice');
+  const meta = readMeta(id) as {mode: string; style?: string};
+  if (meta.mode !== "promo") errors.push('video.json "mode" must be "promo" for a video with no voice');
+  const styleVal = promo.style ?? meta.style;
+  const styles = styleIds();
+  if (styleVal && styles.length && !styles.includes(styleVal)) errors.push(`style "${styleVal}" is not in docs/styles/ (${styles.join(", ")})`);
   if (promo.music) {
     if (!existsSync(p("public", promo.music.src))) errors.push(`music file public/${promo.music.src} does not exist`);
     else if (!existsSync(p("public/music/README.md"))) warnings.push("no public/music/README.md: record the track's licence before you post (SOUL §8)");
   }
   if (promo.voice?.lines?.length) {
     const rec = join(dir, "voice-lines.json");
-    if (!existsSync(rec)) errors.push(`promo.json has voice lines but no voice-lines.json: run \`bun run voice ${id}\``);
-    else {
+    if (existsSync(rec)) {
       const have = JSON.parse(readFileSync(rec, "utf8")) as {id: string; text: string; file: string}[];
       for (const l of promo.voice.lines) {
         if (l.only !== undefined && (!Array.isArray(l.only) || !l.only.every((c) => typeof c === "string" && c))) errors.push(`voice line "${l.id}": "only" must be a list of composition ids, e.g. ["Cut16"]`);
@@ -42,19 +45,18 @@ export const lintPromo = (id: string): number => {
         else if (r.text !== l.text) errors.push(`voice line "${l.id}" changed since the audio was made: run \`bun run voice ${id}\``);
         else if (!existsSync(p("public", r.file))) errors.push(`public/${r.file} does not exist: run \`bun run voice ${id}\``);
       }
-    }
+    } else errors.push(`promo.json has voice lines but no voice-lines.json: run \`bun run voice ${id}\``);
   }
   // storyboard: planned per scene and beat, approved before scene code (docs/storyboard.md)
   if (!errors.length) {
     const sb = loadStoryboard(id);
     if (sb.error) errors.push(`storyboard.json is not valid JSON: ${sb.error}`);
-    else if (!sb.value) warnings.push(`no storyboard yet: plan the shots before building scenes (bun run storyboard ${id} --init, docs/storyboard.md)`);
-    else {
+    else if (sb.value) {
       const visualIds = readdirSync(p("docs/visuals")).filter((f) => f.endsWith(".md") && f !== "README.md").map((f) => f.replace(/\.md$/, ""));
       for (const i of checkPromoStoryboard(sb.value, promo, visualIds)) (i.level === "error" ? errors : warnings).push(`storyboard: ${i.message}`);
       const todo = sb.value.shots.filter((s) => /TODO/.test(`${s.camera} ${s.onScreen} ${s.size ?? ""}`)).length;
       if (todo) warnings.push(`storyboard: ${todo} shot${todo > 1 ? "s" : ""} still TODO`);
-    }
+    } else warnings.push(`no storyboard yet: plan the shots before building scenes (bun run storyboard ${id} --init, docs/storyboard.md)`);
   }
   const scenesFile = join(dir, "scenes.tsx");
   if (existsSync(scenesFile) && readFileSync(scenesFile, "utf8").includes("TemplateScene")) warnings.push("scenes.tsx still uses the TemplateScene placeholder");
