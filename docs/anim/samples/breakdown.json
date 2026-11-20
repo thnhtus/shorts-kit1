@@ -1,0 +1,16 @@
+{
+  "preset": "breakdown",
+  "title": "Phone",
+  "subtitle": "Inside a modern phone",
+  "accent": "#ff7a3d",
+  "time": "9:41",
+  "date": "Thursday 20 November",
+  "labels": [
+    ["Cover glass", "Ceramic shield"],
+    ["Display", "6.7in OLED"],
+    ["Frame", "Titanium band"],
+    ["Logic board", "A-series chip"],
+    ["Battery", "3,582 mAh"],
+    ["Camera", "48MP main"]
+  ]
+}

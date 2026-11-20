@@ -1,0 +1,10 @@
+{
+  "preset": "map-route",
+  "destination": "Harbor Point",
+  "minutes": 24,
+  "distance": 18.6,
+  "unit": "km",
+  "places": ["North Quay", "Botanic Gardens", "Market Hall", "Elm Park", "The Canal"],
+  "accent": "#2f7cf6",
+  "seed": 7
+}

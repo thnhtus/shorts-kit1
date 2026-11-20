@@ -1,0 +1,7 @@
+{
+  "preset": "dan-koe",
+  "lines": ["one choice.", "then the next."],
+  "depth": 8,
+  "seed": 5,
+  "light": false
+}

@@ -1,0 +1,6 @@
+{
+  "preset": "minimalistic-graphics",
+  "lines": ["every step feels small.", "until you look back."],
+  "steps": 5,
+  "light": false
+}
