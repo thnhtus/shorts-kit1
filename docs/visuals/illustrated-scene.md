@@ -1,6 +1,6 @@
 # Illustrated scene (§5g): `illustrated-scene`
 
-**Use when** a story has no usable photos or footage but needs "a person, a place, time passing": drifting, stranded, walking, waiting, sleeping. Build the world from simple illustrated layers (sky + sea or land + a figure) using the shared pieces (`src/shared/nature/` Sea, Sky, Land, TallGrass, Stars, Moon, Sun, Clouds, Rain, Birds; `src/shared/figures/` Person (on a boat), Figure (on land: walks, runs, sits, sleeps), Fish; `src/shared/props/` Oak, Bush, Tent, Breastwork, Campfire, Smoke, Flag, Wagon, Cannon, Adobe, Bridge, Zzz, Letter; `src/shared/motion/Camera`; `src/shared/fx/` Grain, Vignette; BigCount, Chip, DayClock). Browse them with `bun run dev gallery`.
+**Use when** a story has no usable photos or footage but needs "a person, a place, time passing": drifting, stranded, walking, waiting, sleeping. Build the world from simple illustrated layers (sky + sea or land + a figure) using the shared pieces (`src/shared/nature/` Sea, Sky, Land, TallGrass, Stars, Moon, Sun, Clouds, Rain, Birds; `src/shared/figures/` Person (on a boat), Figure (on land: walks, runs, sits, sleeps), Fish; `src/shared/props/` Oak, Bush, Tent, Breastwork, Campfire, Smoke, Flag, Wagon, Cannon, Adobe, Bridge, Zzz, Letter, Bubble, TickBadge, Win; `src/shared/motion/Camera`; `src/shared/fx/` Grain, Vignette; BigCount, Chip, DayClock). Browse them with `bun run dev gallery`.
 
 ## Rules
 

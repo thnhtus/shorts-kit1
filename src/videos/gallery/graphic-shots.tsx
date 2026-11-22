@@ -1,5 +1,5 @@
 import React from "react";
-import {AbsoluteFill} from "remotion";
+import {AbsoluteFill, useCurrentFrame} from "remotion";
 import {SlotWord} from "../../shared/caption/SlotWord";
 import {StrikeReplace} from "../../shared/caption/StrikeReplace";
 import {Typewriter} from "../../shared/caption/Typewriter";
@@ -8,6 +8,7 @@ import {CompareBars, Odometer, ProgressRing, UnitGrid} from "../../shared/chart"
 import {Grain} from "../../shared/fx/Grain";
 import {Vignette} from "../../shared/fx/Vignette";
 import {ArrowMark, CircleMark, CrossOut, Stamp, Underline} from "../../shared/marks";
+import {Bubble, TickBadge, Win} from "../../shared/props";
 import {DEFAULT_PALETTE as P, FONT} from "../../shared/theme";
 
 /**
@@ -112,6 +113,20 @@ const Years: React.FC = () => (
   </Stage>
 );
 
+const Pieces: React.FC = () => {
+  const f = useCurrentFrame();
+  const k = (at: number) => Math.max(0, Math.min(1, (f - at) / 12));
+  return (
+    <Stage>
+      <svg width={1080} height={1920} style={{position: "absolute", inset: 0}}>
+        <Win x={140} y={640} w={800} h={420} title="placeholder.site" />
+        <TickBadge x={860} y={1000} k={k(30)} />
+        <Bubble x={540} y={1200} text="placeholder claim" k={k(6)} tail={-160} />
+      </svg>
+    </Stage>
+  );
+};
+
 export const GRAPHIC_SHOTS: {Component: React.FC; label: string; note: string; frames?: number}[] = [
   {Component: Strike, label: "shared/caption/StrikeReplace", note: "the belief struck, the fact replaces it"},
   {Component: Slot, label: "shared/caption/SlotWord", note: "a reel of decoys lands on the answer"},
@@ -123,4 +138,5 @@ export const GRAPHIC_SHOTS: {Component: React.FC; label: string; note: string; f
   {Component: Ring, label: "shared/chart/ProgressRing", note: "one share of one whole"},
   {Component: Grid, label: "shared/chart/UnitGrid", note: "a ratio as counted units"},
   {Component: Years, label: "shared/chart/Odometer", note: "digits roll from year to year"},
+  {Component: Pieces, label: "shared/props/ui: Bubble, TickBadge, Win", note: "drawn UI pieces; k<=0 hides them"},
 ];
